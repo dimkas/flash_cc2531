@@ -13,9 +13,9 @@
 //#define PIN_DD 28
 
 // Default pins for CubieBoard 2
-#define PIN_RST 2
-#define PIN_DD  3
-#define PIN_DC  4
+#define PIN_RST 98
+#define PIN_DD  99
+#define PIN_DC  100
 
 // Alternative default pins for Rasberry Pi
 //#define PIN_RST 8
