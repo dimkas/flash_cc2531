@@ -8,9 +8,14 @@
 #define CC_ERROR_NOT_WIRED      3
 
 // Default pins for Rasberry Pi
-#define PIN_RST 24
-#define PIN_DC  27
-#define PIN_DD 28
+//#define PIN_RST 24
+//#define PIN_DC  27
+//#define PIN_DD 28
+
+// Default pins for CubieBoard 2
+#define PIN_RST 2
+#define PIN_DD  3
+#define PIN_DC  4
 
 // Alternative default pins for Rasberry Pi
 //#define PIN_RST 8

@@ -1,4 +1,4 @@
-LDLIBS=-lwiringPi
+LDLIBS=-lgpiod
 CFLAGS=-g
 LDFLAGS=-g
 
