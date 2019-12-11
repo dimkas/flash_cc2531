@@ -106,7 +106,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
   
   rst_line = gpiod_chip_get_line(chip, pinRST);
     if (rst_line) {
-        if(gpiod_line_request_output(rst_line, consumer, 0))
+        if(gpiod_line_request_output(rst_line, consumer, 0) == 0)
             printf("Success switch rst line %d to output\n", pinRST);
         else
             printf("Switch rst line %d to output failed\n", pinRST);
@@ -114,7 +114,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
 
   dc_line = gpiod_chip_get_line(chip, pinDC);
   if (dc_line) {
-        if(gpiod_line_request_output(dc_line, consumer, 0))
+        if(gpiod_line_request_output(dc_line, consumer, 0) == 0)
             printf("Success switch dc line %d to output\n", pinDC);
         else
             printf("Switch dc line %d to output failed\n", pinDC);
@@ -122,7 +122,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
 
   dd_line = gpiod_chip_get_line(chip, pinDD);
   if (dd_line) {
-        if(gpiod_line_request_output(dd_line, consumer, 0))
+        if(gpiod_line_request_output(dd_line, consumer, 0) == 0)
             printf("Success switch dd line %d to output\n", pinDD);
         else
             printf("Switch dd line %d to output failed\n", pinDD);
