@@ -16,7 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 *************************************************************************/
 
-#include <wiringPi.h>
+//#include <wiringPi.h>
+#include <gpiod.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,17 +71,25 @@
 #define I_BURST_WRITE    15
 
 void cc_delay_calibrate( );
-int cc_init( int pRST, int pDC, int pDD )
+
+struct gpiod_chip *cc_init(const char *name, int pRST, int pDC, int pDD )
 {
+
+  struct gpiod_chip *chip;
   if(pRST>=0) pinRST=pRST;
   if(pDC>=0) pinDC=pDC;
   if(pDD>=0) pinDD=pDD;
 
-  if(wiringPiSetup() == -1){
-    printf("no wiring pi detected\n");
-    return 0;
+  chip = gpiod_chip_open_by_name(name);
+  
+  if (!chip) {
+    printf("chip with name %s not found\n", name);
+    return NULL;
   }
-  cc_delay_calibrate();
+  else 
+    printf("Use chip %s/%s", gpiod_chip_name(chip), gpiod_chip_label(chip));
+  
+  //cc_delay_calibrate();
 
   // Prepare CC Pins
   pinMode(pinDC,        OUTPUT);
@@ -111,6 +120,7 @@ int cc_init( int pRST, int pDC, int pDD )
   // We are active by default
   cc_active = true;
 
+  return chip;
 };
 
 /**
