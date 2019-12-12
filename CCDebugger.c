@@ -321,7 +321,8 @@ uint8_t cc_switchRead(uint8_t maxWaitCycles)
  
    // Wait for DD to go LOW (Chip is READY)
    
-   struct gpiod_line_event event = { { 0, 200 }, GPIOD_LINE_EVENT_FALLING_EDGE };
+   struct timespec timeout = { 0, 200 };
+   struct gpiod_line_event event = { &timeout, GPIOD_LINE_EVENT_FALLING_EDGE };
    if (gpiod_line_event_wait(dd_line, &event)){
     // Do 8 clock cycles
     for (cnt = 8; cnt; cnt--) {
