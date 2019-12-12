@@ -621,6 +621,7 @@ unsigned short cc_getChipID() {
   unsigned short bAns;
   uint8_t bRes;
 
+  printf("send chip id\n");
   cc_write( instr[I_GET_CHIP_ID] ); // GET_CHIP_ID
   cc_switchRead(250);
 
@@ -629,7 +630,7 @@ unsigned short cc_getChipID() {
   bRes = cc_read(); // Low order
   bAns |= bRes;
   cc_switchWrite();
-
+  printf("got chip id\n");
   return bAns;
 }
 
