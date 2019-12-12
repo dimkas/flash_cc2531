@@ -104,7 +104,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
     return -1;
   }
 
-  printf("Use chip %s/%s", gpiod_chip_name(chip), gpiod_chip_label(chip));
+  printf("Use chip %s/%s\n", gpiod_chip_name(chip), gpiod_chip_label(chip));
   
   //cc_delay_calibrate();
 
@@ -184,6 +184,8 @@ void cc_setActive( uint8_t on )
     gpiod_line_request_input(dd_line, consumer);
     gpiod_line_request_input(rst_line, consumer);
   }
+  
+  gpiod_chip_close(chip);
 }
 
 /**
@@ -320,7 +322,7 @@ uint8_t cc_switchRead(uint8_t maxWaitCycles)
    // Wait for DD to go LOW (Chip is READY)
    
    struct gpiod_line_event event = { { 0, 200 }, GPIOD_LINE_EVENT_FALLING_EDGE };
-   if (gpiod_line_event_wait(dd_line, event)){
+   if (gpiod_line_event_wait(dd_line, &event)){
     // Do 8 clock cycles
     for (cnt = 8; cnt; cnt--) {
         didWait = 1;

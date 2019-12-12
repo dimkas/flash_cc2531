@@ -76,8 +76,8 @@ int main(int argc,char *argv[])
   // enter debug mode
   cc_enter();
   // get ChipID :
-  //uint16_t res;
-  //res = cc_getChipID();
-  //printf("  ID = %04x.\n",res);
-  //cc_setActive(false);
+  uint16_t res;
+  res = cc_getChipID();
+  printf("  ID = %04x.\n",res);
+  cc_setActive(false);
 }
