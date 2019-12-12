@@ -74,7 +74,7 @@ int main(int argc,char *argv[])
   // initialize GPIO and debugger
   cc_init(name, rePin, dcPin, ddPin);
   // enter debug mode
-  //cc_enter();
+  cc_enter();
   // get ChipID :
   //uint16_t res;
   //res = cc_getChipID();
