@@ -227,17 +227,25 @@ uint8_t cc_enter()
   errorFlag = CC_ERROR_NONE;
 
   // Enter debug mode
-  gpiod_line_set_value(rst_line, LOW);
-  gpiod_line_set_value(dc_line, HIGH);
+  int status;
+  status = gpiod_line_set_value(rst_line, LOW);
+  printf("Set rst low line status %d\n", status);
+  status = gpiod_line_set_value(dc_line, HIGH);
+  printf("Set rst high line status %d\n", status);
   cc_delay(200);
-  gpiod_line_set_value(dc_line, LOW);
+  status = gpiod_line_set_value(dc_line, LOW);
+  printf("Set dc low line status %d\n", status);
   cc_delay(40);
-  gpiod_line_set_value(dc_line, HIGH);
+  status = gpiod_line_set_value(dc_line, HIGH);
+  printf("Set dc high line status %d\n", status);
   cc_delay(40);
-  gpiod_line_set_value(dc_line, LOW);
+  status = gpiod_line_set_value(dc_line, LOW);
+  printf("Set dc low line status %d\n", status);
   cc_delay(85);
-  gpiod_line_set_value(rst_line, HIGH);
+  status = gpiod_line_set_value(rst_line, HIGH);
+  printf("Set rst high line status %d\n", status);
   cc_delay(85);
+  printf("In debug mode\n");
 
   // We are now in debug mode
   inDebugMode = 1;
