@@ -23,7 +23,7 @@
 //#define PIN_DD 2
 
   int cc_init( const char *name, int pinRST, int pinDC, int pinDD );
-  void cc_delay( unsigned char d );
+  void cc_delay( uint8_t d );
 
   uint8_t cc_error();
 

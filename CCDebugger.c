@@ -16,7 +16,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 *************************************************************************/
 
-//#include <wiringPi.h>
 #include <gpiod.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -25,6 +24,13 @@
 #include <time.h>
 
 #include "CCDebugger.h"
+
+#define INPUT   0
+#define OUTPUT  1
+
+#define	LOW			 0
+#define	HIGH			 1
+
 
   /**
    * Switch reset pin
@@ -95,7 +101,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
   
   if (!chip) {
     printf("chip with name %s not found\n", name);
-    return NULL;
+    return -1;
   }
 
   printf("Use chip %s/%s", gpiod_chip_name(chip), gpiod_chip_label(chip));
@@ -106,7 +112,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
   
   rst_line = gpiod_chip_get_line(chip, pinRST);
     if (rst_line) {
-        if(gpiod_line_request_output(rst_line, consumer, 0) == 0)
+        if(gpiod_line_request_output(rst_line, consumer, LOW) == 0)
             printf("Success switch rst line %d to output\n", pinRST);
         else
             printf("Switch rst line %d to output failed\n", pinRST);
@@ -114,7 +120,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
 
   dc_line = gpiod_chip_get_line(chip, pinDC);
   if (dc_line) {
-        if(gpiod_line_request_output(dc_line, consumer, 0) == 0)
+        if(gpiod_line_request_output(dc_line, consumer, LOW) == 0)
             printf("Success switch dc line %d to output\n", pinDC);
         else
             printf("Switch dc line %d to output failed\n", pinDC);
@@ -122,7 +128,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
 
   dd_line = gpiod_chip_get_line(chip, pinDD);
   if (dd_line) {
-        if(gpiod_line_request_output(dd_line, consumer, 0) == 0)
+        if(gpiod_line_request_output(dd_line, consumer, LOW) == 0)
             printf("Success switch dd line %d to output\n", pinDD);
         else
             printf("Switch dd line %d to output failed\n", pinDD);
@@ -145,7 +151,7 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
 
   // We are active by default
   cc_active = true;
-  gpiod_chip_close(chip);
+//  gpiod_chip_close(chip);
 
   return 1;
 };
@@ -155,7 +161,6 @@ int cc_init(const char *name, int pRST, int pDC, int pDD )
  */
 void cc_setActive( uint8_t on )
 {
-/*
   // Reset error flag
   errorFlag = CC_ERROR_NONE;
 
@@ -164,33 +169,21 @@ void cc_setActive( uint8_t on )
   cc_active = on;
 
   if (on) {
-
-    // Prepare CC Pins
-    pinMode(pinDC,        OUTPUT);
-    pinMode(pinDD,      OUTPUT);
-    pinMode(pinRST,       OUTPUT);
-    digitalWrite(pinDC,   LOW);
-    digitalWrite(pinDD, LOW);
-    digitalWrite(pinRST,  LOW);
-
-    // Default direction is INPUT
-    cc_setDDDirection(INPUT);
+    // Prepare CC pins
+    gpiod_line_request_output(dc_line, consumer, LOW);
+    gpiod_line_request_output(dd_line, consumer, LOW);
+    gpiod_line_request_output(rst_line, consumer, LOW);
 
   } else {
-
+      
     // Before deactivating, exit debug mode
     if (inDebugMode)
       cc_exit();
 
-    // Put everything in inactive mode
-    pinMode(pinDC,        INPUT);
-    pinMode(pinDD,      INPUT);
-    pinMode(pinRST,       INPUT);
-    digitalWrite(pinDC,   LOW);
-    digitalWrite(pinDD, LOW);
-    digitalWrite(pinRST,  LOW);
-
-  }*/
+    gpiod_line_request_input(dc_line, consumer);
+    gpiod_line_request_input(dd_line, consumer);
+    gpiod_line_request_input(rst_line, consumer);
+  }
 }
 
 /**
@@ -210,28 +203,11 @@ uint8_t cc_error()
 /**
  * Delay a particular number of cycles
  */
-struct timespec tp={0,0};
-static int cc_delay_mult=50;
-void cc_delay( unsigned char d )
+void cc_delay( uint8_t d )
 {
-//   volatile unsigned int i = cc_delay_mult*d;
-//   while( i-- );
-//tp.tv_nsec=40*d;
-//nanosleep(&tp,NULL);
+    struct timespec tp = {0, d};
+    nanosleep(&tp, NULL);
 
-}
-
-/* provas konsideri la rapidecon de la procesoro */
-void cc_delay_calibrate( )
-{
-//   long time0=micros();
-//   cc_delay(200);
-//   cc_delay(200);
-//   cc_delay(200);
-//   cc_delay(200);
-//   cc_delay(200);
-//   long time1=micros();
-//   cc_delay_mult=cc_delay_mult*200/(time1-time0);
 }
 
 /**
@@ -249,18 +225,17 @@ uint8_t cc_enter()
   errorFlag = CC_ERROR_NONE;
 
   // Enter debug mode
-//   digitalWrite(pinRST, LOW);
-//   cc_delay(200);
-//   digitalWrite(pinDC, HIGH);
-//   cc_delay(3);
-//   digitalWrite(pinDC, LOW);
-//   cc_delay(3);
-//   digitalWrite(pinDC, HIGH);
-//   cc_delay(3);
-//   digitalWrite(pinDC, LOW);
-//   cc_delay(4);
-//   digitalWrite(pinRST, HIGH);
-//   cc_delay(200);
+  gpiod_line_set_value(rst_line, LOW);
+  gpiod_line_set_value(dc_line, HIGH);
+  cc_delay(200);
+  gpiod_line_set_value(dc_line, LOW);
+  cc_delay(40);
+  gpiod_line_set_value(dc_line, HIGH);
+  cc_delay(40);
+  gpiod_line_set_value(dc_line, LOW);
+  cc_delay(85);
+  gpiod_line_set_value(rst_line, HIGH);
+  cc_delay(85);
 
   // We are now in debug mode
   inDebugMode = 1;
@@ -277,42 +252,42 @@ uint8_t cc_enter()
  */
 uint8_t cc_write( uint8_t data )
 {
-//   if (!cc_active) {
-//     errorFlag = CC_ERROR_NOT_ACTIVE;
-//     return 0;
-//   };
-//   if (!inDebugMode) {
-//     errorFlag = CC_ERROR_NOT_DEBUGGING;
-//     return 0;
-//   }
-//   // =============
-// 
-//   uint8_t cnt;
-// 
-//   // Make sure DD is on output
-//   cc_setDDDirection(OUTPUT);
-// 
-//   // Sent uint8_ts
-//   for (cnt = 8; cnt; cnt--) {
-// 
-//     // First put data bit on bus
-//     if (data & 0x80)
-//       digitalWrite(pinDD, HIGH);
-//     else
-//       digitalWrite(pinDD, LOW);
-// 
-//     // Place clock on high (other end reads data)
-//     digitalWrite(pinDC, HIGH);
-// 
-//     // Shift & Delay
-//     data <<= 1;
-//     cc_delay(2);
-// 
-//     // Place clock down
-//     digitalWrite(pinDC, LOW);
-//     cc_delay(2);
-// 
-//   }
+   if (!cc_active) {
+     errorFlag = CC_ERROR_NOT_ACTIVE;
+     return 0;
+   };
+   if (!inDebugMode) {
+     errorFlag = CC_ERROR_NOT_DEBUGGING;
+     return 0;
+   }
+   // =============
+ 
+   uint8_t cnt;
+
+   // Make sure dd is on output
+   cc_setDDDirection(OUTPUT);
+ 
+   // Sent uint8_ts
+   for (cnt = 8; cnt; cnt--) {
+ 
+     // First put data bit on bus
+     if (data & 0x80)
+        gpiod_line_set_value(dd_line, HIGH);
+     else
+        gpiod_line_set_value(dd_line, LOW);
+     
+     // Place clock on high (other end reads data)
+     gpiod_line_set_value(dc_line, HIGH);
+  
+     // Shift & Delay
+     data <<= 1;
+     cc_delay(20);
+
+     // Place clock down
+     gpiod_line_set_value(dc_line, LOW);
+     cc_delay(20);
+ 
+   }
 
   // =============
   return 0;
@@ -323,55 +298,48 @@ uint8_t cc_write( uint8_t data )
  */
 uint8_t cc_switchRead(uint8_t maxWaitCycles)
 {
-//   if (!cc_active) {
-//     errorFlag = CC_ERROR_NOT_ACTIVE;
-//     return 0;
-//   }
-//   if (!inDebugMode) {
-//     errorFlag = CC_ERROR_NOT_DEBUGGING;
-//     return 0;
-//   }
-//   // =============
-// 
-//   uint8_t cnt;
-//   uint8_t didWait = 0;
-// 
-//   // Switch to input
-//   cc_setDDDirection(INPUT);
-// 
-//   // Wait at least 83 ns before checking state t(dir_change)
-//   cc_delay(2);
-// 
-//   // Wait for DD to go LOW (Chip is READY)
-//   while (digitalRead(pinDD) == HIGH) {
-// 
-//     // Do 8 clock cycles
-//     for (cnt = 8; cnt; cnt--) {
-//       digitalWrite(pinDC, HIGH);
-//       cc_delay(2);
-//       digitalWrite(pinDC, LOW);
-//       cc_delay(2);
-//     }
-// 
-//     // Let next function know that we did wait
-//     didWait = 1;
-// 
-//     // Check if we ran out if wait cycles
-//     if (!--maxWaitCycles) {
-// 
-//       // If we are waiting for too long, we have lost the chip,
-//       // so also assume we are out of debugging mode
-//       errorFlag = CC_ERROR_NOT_WIRED;
-//       inDebugMode = 0;
-// 
-// 
-//       return 0;
-//     }
-//   }
-// 
-//   // Wait t(sample_wait)
-//   if (didWait) cc_delay(2);
-
+   if (!cc_active) {
+     errorFlag = CC_ERROR_NOT_ACTIVE;
+     return 0;
+   }
+   if (!inDebugMode) {
+     errorFlag = CC_ERROR_NOT_DEBUGGING;
+     return 0;
+   }
+   // =============
+ 
+   uint8_t cnt;
+   uint8_t didWait = 0;
+ 
+   // Switch to input
+   cc_setDDDirection(INPUT);
+ 
+   // Wait at least 83 ns before checking state t(dir_change)
+   cc_delay(32);
+ 
+   // Wait for DD to go LOW (Chip is READY)
+   
+   struct gpiod_line_event event = { { 0, 200 }, GPIOD_LINE_EVENT_FALLING_EDGE };
+   if (gpiod_line_event_wait(dd_line, event)){
+    // Do 8 clock cycles
+    for (cnt = 8; cnt; cnt--) {
+        didWait = 1;
+        gpiod_line_set_value(dc_line, HIGH);
+        cc_delay(32);
+        gpiod_line_set_value(dc_line, LOW);
+        cc_delay(32);
+    }
+       
+   }
+   else {
+       errorFlag = CC_ERROR_NOT_WIRED;
+       inDebugMode = 0;
+       return 0;
+   }
+ 
+  // Wait t(sample_wait)
+  if (didWait) cc_delay(32);
+       
   // =============
   return 0;
 }
@@ -381,8 +349,8 @@ uint8_t cc_switchRead(uint8_t maxWaitCycles)
  */
 uint8_t cc_switchWrite()
 {
-//   cc_setDDDirection(OUTPUT);
-//   return 0;
+   cc_setDDDirection(OUTPUT);
+   return 0;
 }
 
 /**
@@ -390,34 +358,33 @@ uint8_t cc_switchWrite()
  */
 uint8_t cc_read()
 {
-//   if (!cc_active) {
-//     errorFlag = CC_ERROR_NOT_ACTIVE;
-//     return 0;
-//   }
-//   // =============
-// 
-//   uint8_t cnt;
-//   uint8_t data = 0;
-// 
-//   // Switch to input
-//   cc_setDDDirection(INPUT);
-// 
-//   // Send 8 clock pulses if we are HIGH
-//   for (cnt = 8; cnt; cnt--) {
-//     digitalWrite(pinDC, HIGH);
-//     cc_delay(2);
-// 
-//     // Shift and read
-//     data <<= 1;
-//     if (digitalRead(pinDD) == HIGH)
-//       data |= 0x01;
-// 
-//     digitalWrite(pinDC, LOW);
-//     cc_delay(2);
-//   }
-// 
-//   // =============
-//   return data;
+   if (!cc_active) {
+     errorFlag = CC_ERROR_NOT_ACTIVE;
+     return 0;
+   }
+   // =============
+ 
+   uint8_t cnt;
+   uint8_t data = 0;
+ 
+   // Switch to input
+   cc_setDDDirection(INPUT);
+ 
+   // Send 8 clock pulses if we are HIGH
+   for (cnt = 8; cnt; cnt--) {
+     gpiod_line_set_value(dc_line, HIGH);
+     cc_delay(32);
+     // Shift and read
+     data <<= 1;
+     if (gpiod_line_get_value(dd_line) == HIGH)
+       data |= 0x01;
+ 
+     gpiod_line_set_value(dc_line, LOW);
+     cc_delay(32);
+   }
+ 
+   // =============
+   return data;
 }
 
 /**
@@ -425,22 +392,22 @@ uint8_t cc_read()
  */
 void cc_setDDDirection( uint8_t direction )
 {
-/*
+
   // Switch direction if changed
   if (direction == ddIsOutput) return;
   ddIsOutput = direction;
 
   // Handle new direction
   if (ddIsOutput) {
-    digitalWrite(pinDD, LOW); // Disable pull-up
-    pinMode(pinDD, OUTPUT);   // Enable output
-    digitalWrite(pinDD, LOW); // Switch to low
+    gpiod_line_set_value(dd_line, 0);
+    gpiod_line_request_output(dd_line, consumer, 0);
+    gpiod_line_set_value(dd_line, 0);
   } else {
-    digitalWrite(pinDD, LOW); // Disable pull-up
-    pinMode(pinDD, INPUT);    // Disable output
-    digitalWrite(pinDD, LOW); // Don't use output pull-up
+    gpiod_line_set_value(dd_line, 0);
+    gpiod_line_request_input(dd_line, consumer);
+    gpiod_line_set_value(dd_line, 0);
   }
-*/
+
 }
 
 /////////////////////////////////////////////////////////////////////
